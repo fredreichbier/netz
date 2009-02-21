@@ -19,7 +19,13 @@ NetzSCGI := Object clone do(
         application ::= nil
 
         handleSocket := method(socket,
-            coroDo(handleSocketAsync(socket))
+            @handleSocketAsync(socket)
+        )
+
+        with := method(application,
+            c := self clone
+            c setApplication(application)
+            c
         )
 
         handleSocketAsync := method(socket,
