@@ -21,8 +21,26 @@ Netz := Object clone do(
             environment at("PATH_INFO")
         )
 
-        writeln := method(line,
+        write := method(stuff,
             NotImplementedError raise("Request misses a `write` implementation!")
-        )       
+        )
+
+        writeln := method(line,
+            self write(line)
+            self write("\r\n")
+            self
+        )
+
+        # Call it like this:
+        # `startResponse("200 OK", "Content-type: text/html", "Bla: Blubb", ...)`
+        startResponse := method(status,
+            self writeln("Status: " .. status)
+            for(i, 1, call argCount - 1,
+                self writeln(call evalArgAt(i))
+            )
+            # now write a blank line (content follows)
+            self writeln
+            self
+        )
     )
 )

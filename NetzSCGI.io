@@ -7,11 +7,10 @@ NetzSCGI := Object clone do(
     Request := Netz BaseRequest clone do(
         socket ::= nil
         
-        writeln := method(line,
+        write := method(line,
             if(line isNil not,
                 socket write(line)
             )
-            socket write("\r\n")
         )
     )
 
