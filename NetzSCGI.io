@@ -35,25 +35,32 @@ NetzSCGI := Object clone do(
             while(socket isOpen,
                 if(socket streamReadNextChunk) then(
                     input := socket readBuffer
-
-                    # get the header netstring
-                    i := input findSeq(":")
-                    count := input exSlice(0, i) asNumber
-                    params := input exSlice(i + 1, i + 1 + count) split("\0")
-                    rest := input exSlice(i + 1 + count + 1)
-
-                    # set the header values
-                    environ := Map clone
+                    # get the netstring length
+                    colonPos := input findSeq(":")
+                    length := input exSlice(0, colonPos) asNumber
+                    headers := input exSlice(colonPos + 1, colonPos + length + 1)
+                    counter := 0
                     key := nil
-                    params foreach(i, value,
-                        if(i isEven,
-                            key = value
+                    environ := Map clone
+                    headers split("\0") foreach(part,
+                        if(counter isEven,
+                            key = part
                         ,
-                            environ atPut(key, value)
+                            environ atPut(key, part)
                         )
+                        counter = counter + 1
+                    )
+                    # the rest is the body
+                    if((input at(colonPos + length + 1) == 44) not, # 44 is the comma
+                        Netz NetzError raise("Malformed netstring received (no comma)")
+                    )
+                    body := ""
+                    if(environ hasKey("CONTENT_LENGTH"),
+                        bodyPos := colonPos + length + 2
+                        body = input exSlice(bodyPos, bodyPos + environ at("CONTENT_LENGTH") asNumber)
                     )
                     # create a request object
-                    request := NetzSCGI Request clone setEnvironment(environ) setSocket(socket)
+                    request := NetzSCGI Request clone setEnvironment(environ) setSocket(socket) setBody(body)
                     application handleRequest(request)
                     socket close
                     break

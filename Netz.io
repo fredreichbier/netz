@@ -1,8 +1,10 @@
 Netz := Object clone do(
     NotImplementedError := Exception clone
+    NetzError := Exception clone
 
     BaseRequest := Object clone do(
         environment ::= nil
+        body ::= nil
 
         requestMethod := method(
              environment at("REQUEST_METHOD") asUppercase
@@ -63,5 +65,25 @@ Netz := Object clone do(
             )
         )
         decoded
+    )
+
+    /*doc Netz escapeHtmlSpecialChars(string[, quotes])
+    convert <, > and & to &lt;, &gt; and &amp;. If *quotes*
+    is true, " is additionally converted to &quot;.
+    Make sure that you call this for already url-decoded
+    strings (call decodeUrlParam before) for more safety.
+    */
+    escapeHtmlSpecialChars := method(string, quotes,
+        if(string isMutable not,
+            string = string asMutable
+        )
+        string println
+        string replaceSeq("&", "&amp;")
+        string replaceSeq("<", "&lt;")
+        string replaceSeq(">", "&gt;")
+        if(quotes,
+            string replaceSeq("\"", "&quot;")
+        )
+        string
     )
 )

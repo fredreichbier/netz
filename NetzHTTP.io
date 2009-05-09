@@ -30,11 +30,11 @@ NetzHTTP := Object clone do(
                     lines := socket readBuffer split("\r\n")
                     requestLineTokens := lines removeFirst split(" ")
                     requestMethod := requestLineTokens at(0)
-                    requestUrl := requestLineTokens at(1)
+                    requestUrl := Netz decodeUrlParam(requestLineTokens at(1))
                     requestVersion := requestLineTokens at(2)
                     environ := Map clone
                     # fill the initial values
-                    environ atPut("REQUEST_URI", Netz decodeUrlParam(requestUrl))
+                    environ atPut("REQUEST_URI", requestUrl)
                     environ atPut("SERVER_NAME", self serverName)
                     environ atPut("SERVER_PROTOCOL", requestVersion)
                     environ atPut("REQUEST_METHOD", requestMethod)
@@ -44,7 +44,9 @@ NetzHTTP := Object clone do(
                         environ atPut("PATH_INFO", splitted at(0))
                         environ atPut("QUERY_STRING", splitted at(1))
                     ,
-                        environ atPut("PATH_INFO", requestUrl)
+                        # clone because we don't want to have the path info
+                        # and the request uri to be the same object
+                        environ atPut("PATH_INFO", requestUrl clone)
                         environ atPut("QUERY_STRING", "")
                     )
                     environ atPut("REMOTE_ADDR", socket ipAddress ip)
