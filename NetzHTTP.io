@@ -17,6 +17,7 @@ NetzHTTP := Object clone do(
 
     HTTPServer := Server clone do(
         application ::= nil
+        serverName ::= "NetzHTTP"
 
         handleSocket := method(socket,
             @handleSocketAsync(socket)
@@ -30,14 +31,32 @@ NetzHTTP := Object clone do(
                     requestLineTokens := lines removeFirst split(" ")
                     requestMethod := requestLineTokens at(0)
                     requestUrl := requestLineTokens at(1)
-                    # ignore HTTP/1.x :(
+                    requestVersion := requestLineTokens at(2)
                     environ := Map clone
+                    # fill the initial values
+                    environ atPut("REQUEST_URI", Netz decodeUrlParam(requestUrl))
+                    environ atPut("SERVER_NAME", self serverName)
+                    environ atPut("SERVER_PROTOCOL", requestVersion)
+                    environ atPut("REQUEST_METHOD", requestMethod)
+                    if(requestUrl findSeq("?") isNil not,
+                        # has query string
+                        splitted := requestUrl splitAt(requestUrl findSeq("?"))
+                        environ atPut("PATH_INFO", splitted at(0))
+                        environ atPut("QUERY_STRING", splitted at(1))
+                    ,
+                        environ atPut("PATH_INFO", requestUrl)
+                        environ atPut("QUERY_STRING", "")
+                    )
+                    environ atPut("REMOTE_ADDR", socket ipAddress ip)
+                    # TODO: make "REMOTE_HOST" available?
+                    # TODO: make "CONTENT_TYPE" available
                     lines foreach(line,
                         if(line strip isEmpty,
                             break
                         )
-                        splitted := line splitAt(line findNthSeq(":", 1))
-                        environ atPut(splitted at(0), Netz decodeUrlParam(splitted at(1)))
+                        splitted := line splitAt(line findSeq(": "))
+                        value := splitted at(1) exSlice(2)
+                        environ atPut(splitted at(0), Netz decodeUrlParam(value))
                     )
                     # TODO: message body!
                     request := NetzHTTP Request clone setSocket(socket) setEnvironment(environ)

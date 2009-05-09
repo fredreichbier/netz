@@ -53,7 +53,7 @@ Netz := Object clone do(
         while(i < url size,
             if(url at(i) == sign,
                 # decode sequence following
-                seq := (url at(i + 1) asCharacter) .. (url at(i + 2) asCharacter)
+                seq := url exSlice(i + 1, i + 3)
                 decoded append(("0x" .. seq) asNumber)
                 i = i + 3
             ,

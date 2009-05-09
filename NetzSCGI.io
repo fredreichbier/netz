@@ -32,7 +32,6 @@ NetzSCGI := Object clone do(
         )
 
         handleSocketAsync := method(socket,
-            writeln("[Got scgi request connection from ", socket ipAddress, "]")
             while(socket isOpen,
                 if(socket streamReadNextChunk) then(
                     input := socket readBuffer
@@ -60,7 +59,6 @@ NetzSCGI := Object clone do(
                     break
                 )
             )
-            writeln("[Closed ", socket ipAddress, "]")
         )
     )
 )
