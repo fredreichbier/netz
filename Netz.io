@@ -31,16 +31,37 @@ Netz := Object clone do(
             self
         )
 
-        # Call it like this:
-        # `startResponse("200 OK", "Content-type: text/html", "Bla: Blubb", ...)`
-        startResponse := method(status,
-            self writeln("Status: " .. status)
-            for(i, 1, call argCount - 1,
-                self writeln(call evalArgAt(i))
+    )
+
+    SocketRequest := BaseRequest clone do(
+        socket ::= nil
+
+        write := method(line,
+            if(line isNil not,
+                socket write(line)
             )
-            # now write a blank line (content follows)
-            self writeln
-            self
         )
+    )
+
+    /*doc Netz decodeUrlParam(url)
+    decode an url parameter as described in rfc 1738
+    */
+    decodeUrlParam := method(url,
+        sign := "%" at(0)
+        i := 0
+        decoded := Sequence clone asMutable
+        while(i < url size,
+            if(url at(i) == sign,
+                # decode sequence following
+                seq := (url at(i + 1) asCharacter) .. (url at(i + 2) asCharacter)
+                decoded append(("0x" .. seq) asNumber)
+                i = i + 3
+            ,
+                # nothing special following
+                decoded append(url at(i))
+                i = i + 1
+            )
+        )
+        decoded
     )
 )

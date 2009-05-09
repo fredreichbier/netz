@@ -4,13 +4,17 @@
 Netz
 
 NetzSCGI := Object clone do(
-    Request := Netz BaseRequest clone do(
-        socket ::= nil
-        
-        write := method(line,
-            if(line isNil not,
-                socket write(line)
+    Request := Netz SocketRequest clone do(
+        # Call it like this:
+        # `startResponse("200 OK", "Content-type: text/html", "Bla: Blubb", ...)`
+        startResponse := method(status,
+            self writeln("Status: " .. status)
+            for(i, 1, call argCount - 1,
+                self writeln(call evalArgAt(i))
             )
+            # now write a blank line (content follows)
+            self writeln
+            self
         )
     )
 
@@ -32,7 +36,7 @@ NetzSCGI := Object clone do(
             while(socket isOpen,
                 if(socket streamReadNextChunk) then(
                     input := socket readBuffer
-                    
+
                     # get the header netstring
                     i := input findSeq(":")
                     count := input exSlice(0, i) asNumber
@@ -56,7 +60,7 @@ NetzSCGI := Object clone do(
                     break
                 )
             )
-            writeln("[Closed ", socket ipAddress, "]")        
+            writeln("[Closed ", socket ipAddress, "]")
         )
     )
 )

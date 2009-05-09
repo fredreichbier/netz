@@ -1,12 +1,11 @@
-NetzSCGI
+NetzHTTP
 
 app := Object clone do(
     handleRequest := method(req,
-        req writeln("Content-type: text/html")
-        req writeln
+        req startResponse("200 OK", "Content-type: text/html")
         req writeln("<h1>Hi!</h1>")
     )
 )
 
-s := NetzSCGI SCGIServer clone setApplication(app) setPort(4001)
+s := NetzHTTP HTTPServer clone setApplication(app) setPort(8001)
 s start
